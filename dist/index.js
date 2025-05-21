@@ -76,6 +76,14 @@ try {
     try {
         const jsonContent = JSON.parse(decrypted.toString('utf-8'));
         console.log('解密后的 JSON 内容:', JSON.stringify(jsonContent, null, 2));
+        // 将时间戳转换为年月日格式
+        const createdDate = new Date(parseInt(jsonContent.created));
+        const formattedDate = createdDate.toLocaleDateString('zh-CN', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+        });
+        console.log('创建时间:', formattedDate);
     }
     catch (jsonError) {
         console.log('解密后的内容:', decrypted.toString('utf-8'));
