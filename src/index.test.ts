@@ -1,4 +1,4 @@
-import { toUpperCase, toLowerCase, StringUtils } from './index';
+import { toUpperCase, toLowerCase, StringUtils, getCurrentTime, getCurrentDate, getCurrentTimeStamp } from './index';
 
 describe('String Utils', () => {
     describe('toUpperCase', () => {
@@ -42,6 +42,32 @@ describe('String Utils', () => {
                 expect(StringUtils.isNotEmpty('hello')).toBe(true);
                 expect(StringUtils.isNotEmpty('  hello  ')).toBe(true);
             });
+        });
+    });
+});
+
+describe('Time Utils', () => {
+    describe('getCurrentTime', () => {
+        it('should return current time in Chinese format', () => {
+            const time = getCurrentTime();
+            expect(typeof time).toBe('string');
+            expect(time).toMatch(/\d{4}\/\d{1,2}\/\d{1,2} \d{1,2}:\d{1,2}:\d{1,2}/);
+        });
+    });
+
+    describe('getCurrentDate', () => {
+        it('should return current date in Chinese format', () => {
+            const date = getCurrentDate();
+            expect(typeof date).toBe('string');
+            expect(date).toMatch(/\d{4}\/\d{1,2}\/\d{1,2}/);
+        });
+    });
+
+    describe('getCurrentTimeStamp', () => {
+        it('should return current timestamp', () => {
+            const timestamp = getCurrentTimeStamp();
+            expect(typeof timestamp).toBe('number');
+            expect(timestamp).toBeGreaterThan(0);
         });
     });
 }); 

@@ -1,4 +1,8 @@
 // src/index.ts
+
+// 自动打印当前时间
+console.log(`当前时间: ${new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })}`);
+
 export function greet(name: string): string {
     return `Hello, ${name}!`;
 }
@@ -46,4 +50,17 @@ export class StringUtils {
     static isNotEmpty(str: string): boolean {
         return !this.isEmpty(str);
     }
+}
+
+// 导出时间相关函数
+export function getCurrentTime(): string {
+    return new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' });
+}
+
+export function getCurrentDate(): string {
+    return new Date().toLocaleDateString('zh-CN', { timeZone: 'Asia/Shanghai' });
+}
+
+export function getCurrentTimeStamp(): number {
+    return Date.now();
 }
