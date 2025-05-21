@@ -1,10 +1,12 @@
-import { toUpperCase, toLowerCase, StringUtils, getCurrentTime, getCurrentDate, getCurrentTimeStamp, readEncryptedFile } from './index';
+import { toUpperCase, toLowerCase, StringUtils, getCurrentTime, getCurrentDate, getCurrentTimeStamp, readEncryptedFile, decryptFile } from './index';
 import * as fs from 'fs';
 import * as path from 'path';
+import * as crypto from 'crypto';
 
 // 模拟 fs 模块
 jest.mock('fs');
 jest.mock('path');
+jest.mock('crypto');
 
 describe('String Utils', () => {
     describe('toUpperCase', () => {
@@ -114,6 +116,71 @@ describe('File Utils', () => {
             (path.join as jest.Mock).mockReturnValue('/test/path/encrypted.txt');
 
             expect(() => readEncryptedFile()).toThrow('读取文件失败: 读取错误');
+        });
+    });
+});
+
+describe('Decryption Utils', () => {
+    beforeEach(() => {
+        // 重置所有模拟
+        jest.clearAllMocks();
+    });
+
+    describe('decryptFile', () => {
+        it('should decrypt file content successfully', () => {
+            // 模拟文件存在
+            (fs.existsSync as jest.Mock).mockImplementation((path: string) => true);
+            (fs.readFileSync as jest.Mock).mockImplementation((path: string) => {
+                if (path.includes('private_key.pem')) {
+                    return '-----BEGIN PRIVATE KEY-----\nMOCK_PRIVATE_KEY\n-----END PRIVATE KEY-----';
+                }
+                return 'MOCK_ENCRYPTED_CONTENT';
+            });
+            (path.join as jest.Mock).mockImplementation((...args) => args.join('/'));
+            (crypto.privateDecrypt as jest.Mock).mockReturnValue(Buffer.from('decrypted content'));
+
+            const content = decryptFile();
+            expect(content).toBe('decrypted content');
+            expect(fs.existsSync).toHaveBeenCalledTimes(2);
+            expect(fs.readFileSync).toHaveBeenCalledTimes(2);
+            expect(crypto.privateDecrypt).toHaveBeenCalled();
+        });
+
+        it('should throw error when private key file is missing', () => {
+            // 模拟私钥文件不存在
+            (fs.existsSync as jest.Mock).mockImplementation((path: string) =>
+                !path.includes('private_key.pem')
+            );
+            (path.join as jest.Mock).mockImplementation((...args) => args.join('/'));
+
+            expect(() => decryptFile()).toThrow('未找到 private_key.pem 文件');
+        });
+
+        it('should throw error when encrypted file is missing', () => {
+            // 模拟加密文件不存在
+            (fs.existsSync as jest.Mock).mockImplementation((path: string) =>
+                !path.includes('encrypted.txt')
+            );
+            (path.join as jest.Mock).mockImplementation((...args) => args.join('/'));
+
+            expect(() => decryptFile()).toThrow('未找到 encrypted.txt 文件');
+        });
+
+        it('should throw error when decryption fails', () => {
+            // 模拟文件存在但解密失败
+            (fs.existsSync as jest.Mock).mockImplementation((path: string) => true);
+            (fs.readFileSync as jest.Mock).mockImplementation((path: string) => {
+                if (path.includes('private_key.pem')) {
+                    return '-----BEGIN PRIVATE KEY-----\nMOCK_PRIVATE_KEY\n-----END PRIVATE KEY-----';
+                }
+                return 'MOCK_ENCRYPTED_CONTENT';
+            });
+            (path.join as jest.Mock).mockImplementation((...args) => args.join('/'));
+            (crypto.privateDecrypt as jest.Mock).mockImplementation(() => {
+                throw new Error('解密失败');
+            });
+
+            expect(() => decryptFile()).toThrow('解密失败: 解密失败');
         });
     });
 }); 

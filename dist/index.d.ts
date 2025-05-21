@@ -1,3 +1,4 @@
+export declare function decryptFile(): string;
 export declare function readEncryptedFile(): string;
 export declare function greet(name: string): string;
 /**
