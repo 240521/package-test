@@ -1,6 +1,6 @@
 {
   "name": "package-test",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "用来测试发布npm依赖包",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
