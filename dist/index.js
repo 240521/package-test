@@ -69,9 +69,17 @@ try {
     // 解密内容
     const decrypted = crypto.privateDecrypt({
         key: privateKey,
-        padding: crypto.constants.RSA_PKCS1_PADDING,
+        padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
+        oaepHash: 'sha256',
     }, Buffer.from(encryptedContent, 'base64'));
-    console.log('解密后的内容:', decrypted.toString('utf-8'));
+    // 尝试解析 JSON
+    try {
+        const jsonContent = JSON.parse(decrypted.toString('utf-8'));
+        console.log('解密后的 JSON 内容:', JSON.stringify(jsonContent, null, 2));
+    }
+    catch (jsonError) {
+        console.log('解密后的内容:', decrypted.toString('utf-8'));
+    }
 }
 catch (error) {
     console.error('解密过程中发生错误:', error instanceof Error ? error.message : String(error));
@@ -95,9 +103,17 @@ function decryptFile() {
         // 解密内容
         const decrypted = crypto.privateDecrypt({
             key: privateKey,
-            padding: crypto.constants.RSA_PKCS1_PADDING,
+            padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
+            oaepHash: 'sha256',
         }, Buffer.from(encryptedContent, 'base64'));
-        return decrypted.toString('utf-8');
+        // 尝试解析 JSON
+        try {
+            const jsonContent = JSON.parse(decrypted.toString('utf-8'));
+            return JSON.stringify(jsonContent, null, 2);
+        }
+        catch (jsonError) {
+            return decrypted.toString('utf-8');
+        }
     }
     catch (error) {
         throw new Error(`解密失败: ${error instanceof Error ? error.message : String(error)}`);
