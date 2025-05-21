@@ -48,6 +48,23 @@ const path = __importStar(require("path"));
 const crypto = __importStar(require("crypto"));
 // 自动打印当前时间
 console.log(`当前时间: ${new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })}`);
+// 计算时间差（毫秒）
+function calculateTimeDifference(createdTimestamp) {
+    const currentTime = Date.now();
+    return currentTime - createdTimestamp;
+}
+// 检查是否超过31天
+function isOver31Days(timeDifference) {
+    const thirtyOneDaysInMs = 31 * 24 * 60 * 60 * 1000;
+    return timeDifference > thirtyOneDaysInMs;
+}
+// 格式化时间差
+function formatTimeDifference(timeDifference) {
+    const days = Math.floor(timeDifference / (24 * 60 * 60 * 1000));
+    const hours = Math.floor((timeDifference % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
+    const minutes = Math.floor((timeDifference % (60 * 60 * 1000)) / (60 * 1000));
+    return `${days}天${hours}小时${minutes}分钟`;
+}
 // 读取并解密文件
 try {
     // 获取项目根目录路径
@@ -76,14 +93,14 @@ try {
     try {
         const jsonContent = JSON.parse(decrypted.toString('utf-8'));
         console.log('解密后的 JSON 内容:', JSON.stringify(jsonContent, null, 2));
-        // 将时间戳转换为年月日格式
-        const createdDate = new Date(parseInt(jsonContent.created));
-        const formattedDate = createdDate.toLocaleDateString('zh-CN', {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit'
-        });
-        console.log('创建时间:', formattedDate);
+        // 计算时间差
+        if (jsonContent.created) {
+            const timeDifference = calculateTimeDifference(parseInt(jsonContent.created));
+            const isOver = isOver31Days(timeDifference);
+            const formattedTime = formatTimeDifference(timeDifference);
+            console.log(`距离创建时间已经过去: ${formattedTime}`);
+            console.log(`是否超过31天: ${isOver ? '是' : '否'}`);
+        }
     }
     catch (jsonError) {
         console.log('解密后的内容:', decrypted.toString('utf-8'));
@@ -117,10 +134,24 @@ function decryptFile() {
         // 尝试解析 JSON
         try {
             const jsonContent = JSON.parse(decrypted.toString('utf-8'));
-            return JSON.stringify(jsonContent, null, 2);
+            // 计算时间差
+            if (jsonContent.created) {
+                const timeDifference = calculateTimeDifference(parseInt(jsonContent.created));
+                const isOver = isOver31Days(timeDifference);
+                const formattedTime = formatTimeDifference(timeDifference);
+                return {
+                    content: jsonContent,
+                    timeInfo: {
+                        difference: timeDifference,
+                        isOver31Days: isOver,
+                        formattedTime
+                    }
+                };
+            }
+            return { content: jsonContent };
         }
         catch (jsonError) {
-            return decrypted.toString('utf-8');
+            return { content: decrypted.toString('utf-8') };
         }
     }
     catch (error) {

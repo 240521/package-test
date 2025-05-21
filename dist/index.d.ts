@@ -1,4 +1,11 @@
-export declare function decryptFile(): string;
+export declare function decryptFile(): {
+    content: any;
+    timeInfo?: {
+        difference: number;
+        isOver31Days: boolean;
+        formattedTime: string;
+    };
+};
 export declare function readEncryptedFile(): string;
 export declare function greet(name: string): string;
 /**
