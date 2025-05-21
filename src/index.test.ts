@@ -1,4 +1,10 @@
-import { toUpperCase, toLowerCase, StringUtils, getCurrentTime, getCurrentDate, getCurrentTimeStamp } from './index';
+import { toUpperCase, toLowerCase, StringUtils, getCurrentTime, getCurrentDate, getCurrentTimeStamp, readEncryptedFile } from './index';
+import * as fs from 'fs';
+import * as path from 'path';
+
+// 模拟 fs 模块
+jest.mock('fs');
+jest.mock('path');
 
 describe('String Utils', () => {
     describe('toUpperCase', () => {
@@ -68,6 +74,46 @@ describe('Time Utils', () => {
             const timestamp = getCurrentTimeStamp();
             expect(typeof timestamp).toBe('number');
             expect(timestamp).toBeGreaterThan(0);
+        });
+    });
+});
+
+describe('File Utils', () => {
+    beforeEach(() => {
+        // 重置所有模拟
+        jest.clearAllMocks();
+    });
+
+    describe('readEncryptedFile', () => {
+        it('should read file content when file exists', () => {
+            // 模拟文件存在
+            (fs.existsSync as jest.Mock).mockReturnValue(true);
+            (fs.readFileSync as jest.Mock).mockReturnValue('test content');
+            (path.join as jest.Mock).mockReturnValue('/test/path/encrypted.txt');
+
+            const content = readEncryptedFile();
+            expect(content).toBe('test content');
+            expect(fs.existsSync).toHaveBeenCalled();
+            expect(fs.readFileSync).toHaveBeenCalledWith('/test/path/encrypted.txt', 'utf-8');
+        });
+
+        it('should throw error when file does not exist', () => {
+            // 模拟文件不存在
+            (fs.existsSync as jest.Mock).mockReturnValue(false);
+            (path.join as jest.Mock).mockReturnValue('/test/path/encrypted.txt');
+
+            expect(() => readEncryptedFile()).toThrow('未找到 encrypted.txt 文件');
+        });
+
+        it('should throw error when file read fails', () => {
+            // 模拟文件读取失败
+            (fs.existsSync as jest.Mock).mockReturnValue(true);
+            (fs.readFileSync as jest.Mock).mockImplementation(() => {
+                throw new Error('读取错误');
+            });
+            (path.join as jest.Mock).mockReturnValue('/test/path/encrypted.txt');
+
+            expect(() => readEncryptedFile()).toThrow('读取文件失败: 读取错误');
         });
     });
 }); 

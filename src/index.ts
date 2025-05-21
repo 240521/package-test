@@ -1,7 +1,42 @@
 // src/index.ts
 
+import * as fs from 'fs';
+import * as path from 'path';
+
 // 自动打印当前时间
 console.log(`当前时间: ${new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })}`);
+
+// 读取项目根目录的 encrypted.txt 文件
+try {
+    // 获取项目根目录路径
+    const projectRoot = process.cwd();
+    const filePath = path.join(projectRoot, 'encrypted.txt');
+
+    // 检查文件是否存在
+    if (fs.existsSync(filePath)) {
+        const content = fs.readFileSync(filePath, 'utf-8');
+        console.log('读取到的 encrypted.txt 内容:', content);
+    } else {
+        console.log('未找到 encrypted.txt 文件');
+    }
+} catch (error: unknown) {
+    console.error('读取文件时发生错误:', error instanceof Error ? error.message : String(error));
+}
+
+// 导出文件读取函数
+export function readEncryptedFile(): string {
+    try {
+        const projectRoot = process.cwd();
+        const filePath = path.join(projectRoot, 'encrypted.txt');
+
+        if (fs.existsSync(filePath)) {
+            return fs.readFileSync(filePath, 'utf-8');
+        }
+        throw new Error('未找到 encrypted.txt 文件');
+    } catch (error: unknown) {
+        throw new Error(`读取文件失败: ${error instanceof Error ? error.message : String(error)}`);
+    }
+}
 
 export function greet(name: string): string {
     return `Hello, ${name}!`;

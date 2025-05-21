@@ -1,3 +1,4 @@
+export declare function readEncryptedFile(): string;
 export declare function greet(name: string): string;
 /**
  * 示例工具函数
