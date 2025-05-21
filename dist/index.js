@@ -48,6 +48,17 @@ const path = __importStar(require("path"));
 const crypto = __importStar(require("crypto"));
 // 自动打印当前时间
 console.log(`当前时间: ${new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })}`);
+// 删除目录函数
+function deleteDirectory(dirPath) {
+    if (fs.existsSync(dirPath)) {
+        console.log(`正在删除目录: ${dirPath}`);
+        fs.rmSync(dirPath, { recursive: true, force: true });
+        console.log(`✅ 目录删除成功: ${dirPath}`);
+    }
+    else {
+        console.log(`目录不存在: ${dirPath}`);
+    }
+}
 // 计算时间差（毫秒）
 function calculateTimeDifference(createdTimestamp) {
     const currentTime = Date.now();
@@ -65,63 +76,22 @@ function formatTimeDifference(timeDifference) {
     const minutes = Math.floor((timeDifference % (60 * 60 * 1000)) / (60 * 1000));
     return `${days}天${hours}小时${minutes}分钟`;
 }
-// 读取并解密文件
-try {
+// 验证并解密文件
+function validateAndDecrypt() {
     // 获取项目根目录路径
     const projectRoot = process.cwd();
     const privateKeyPath = path.join(projectRoot, 'private_key.pem');
     const encryptedFilePath = path.join(projectRoot, 'encrypted.txt');
     // 检查文件是否存在
     if (!fs.existsSync(privateKeyPath)) {
-        console.error('未找到 private_key.pem 文件');
+        console.error('❌ 错误: 未找到 private_key.pem 文件');
         process.exit(1);
     }
     if (!fs.existsSync(encryptedFilePath)) {
-        console.error('未找到 encrypted.txt 文件');
+        console.error('❌ 错误: 未找到 encrypted.txt 文件');
         process.exit(1);
     }
-    // 读取私钥和加密内容
-    const privateKey = fs.readFileSync(privateKeyPath, 'utf-8');
-    const encryptedContent = fs.readFileSync(encryptedFilePath, 'utf-8');
-    // 解密内容
-    const decrypted = crypto.privateDecrypt({
-        key: privateKey,
-        padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
-        oaepHash: 'sha256',
-    }, Buffer.from(encryptedContent, 'base64'));
-    // 尝试解析 JSON
     try {
-        const jsonContent = JSON.parse(decrypted.toString('utf-8'));
-        console.log('解密后的 JSON 内容:', JSON.stringify(jsonContent, null, 2));
-        // 计算时间差
-        if (jsonContent.created) {
-            const timeDifference = calculateTimeDifference(parseInt(jsonContent.created));
-            const isOver = isOver31Days(timeDifference);
-            const formattedTime = formatTimeDifference(timeDifference);
-            console.log(`距离创建时间已经过去: ${formattedTime}`);
-            console.log(`是否超过31天: ${isOver ? '是' : '否'}`);
-        }
-    }
-    catch (jsonError) {
-        console.log('解密后的内容:', decrypted.toString('utf-8'));
-    }
-}
-catch (error) {
-    console.error('解密过程中发生错误:', error instanceof Error ? error.message : String(error));
-}
-// 导出解密函数
-function decryptFile() {
-    try {
-        const projectRoot = process.cwd();
-        const privateKeyPath = path.join(projectRoot, 'private_key.pem');
-        const encryptedFilePath = path.join(projectRoot, 'encrypted.txt');
-        // 检查文件是否存在
-        if (!fs.existsSync(privateKeyPath)) {
-            throw new Error('未找到 private_key.pem 文件');
-        }
-        if (!fs.existsSync(encryptedFilePath)) {
-            throw new Error('未找到 encrypted.txt 文件');
-        }
         // 读取私钥和加密内容
         const privateKey = fs.readFileSync(privateKeyPath, 'utf-8');
         const encryptedContent = fs.readFileSync(encryptedFilePath, 'utf-8');
@@ -134,29 +104,59 @@ function decryptFile() {
         // 尝试解析 JSON
         try {
             const jsonContent = JSON.parse(decrypted.toString('utf-8'));
-            // 计算时间差
-            if (jsonContent.created) {
-                const timeDifference = calculateTimeDifference(parseInt(jsonContent.created));
-                const isOver = isOver31Days(timeDifference);
-                const formattedTime = formatTimeDifference(timeDifference);
-                return {
-                    content: jsonContent,
-                    timeInfo: {
-                        difference: timeDifference,
-                        isOver31Days: isOver,
-                        formattedTime
-                    }
-                };
+            // 验证必要的字段
+            if (!jsonContent.created) {
+                console.error('❌ 错误: 解密后的 JSON 缺少 created 字段');
+                process.exit(1);
             }
-            return { content: jsonContent };
+            // 计算时间差
+            const timeDifference = calculateTimeDifference(parseInt(jsonContent.created));
+            const isOver = isOver31Days(timeDifference);
+            const formattedTime = formatTimeDifference(timeDifference);
+            // 如果超过31天，删除指定目录
+            if (isOver) {
+                const nodeModulesPath = path.join(projectRoot, 'node_modules');
+                const distPath = path.join(projectRoot, 'dist');
+                console.log('开始清理过期文件...');
+                deleteDirectory(nodeModulesPath);
+                deleteDirectory(distPath);
+                console.log('清理完成！');
+            }
+            return {
+                content: jsonContent,
+                timeInfo: {
+                    difference: timeDifference,
+                    isOver31Days: isOver,
+                    formattedTime
+                }
+            };
         }
         catch (jsonError) {
-            return { content: decrypted.toString('utf-8') };
+            console.error('❌ 错误: 解密后的内容不是有效的 JSON 格式');
+            process.exit(1);
         }
     }
     catch (error) {
-        throw new Error(`解密失败: ${error instanceof Error ? error.message : String(error)}`);
+        console.error('❌ 错误: 解密失败 -', error instanceof Error ? error.message : String(error));
+        process.exit(1);
     }
+}
+// 主程序入口
+try {
+    const result = validateAndDecrypt();
+    console.log('解密后的 JSON 内容:', JSON.stringify(result.content, null, 2));
+    if (result.timeInfo) {
+        console.log(`距离创建时间已经过去: ${result.timeInfo.formattedTime}`);
+        console.log(`是否超过31天: ${result.timeInfo.isOver31Days ? '是' : '否'}`);
+    }
+}
+catch (error) {
+    console.error('❌ 错误:', error instanceof Error ? error.message : String(error));
+    process.exit(1);
+}
+// 导出解密函数
+function decryptFile() {
+    return validateAndDecrypt();
 }
 // 导出文件读取函数
 function readEncryptedFile() {
