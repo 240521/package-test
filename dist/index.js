@@ -34,7 +34,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.StringUtils = void 0;
+exports.DecryptGuard = exports.DecryptModule = exports.StringUtils = void 0;
 exports.decryptFile = decryptFile;
 exports.readEncryptedFile = readEncryptedFile;
 exports.greet = greet;
@@ -226,4 +226,8 @@ function getCurrentDate() {
 function getCurrentTimeStamp() {
     return Date.now();
 }
+var decrypt_module_1 = require("./decrypt.module");
+Object.defineProperty(exports, "DecryptModule", { enumerable: true, get: function () { return decrypt_module_1.DecryptModule; } });
+var decrypt_guard_1 = require("./decrypt.guard");
+Object.defineProperty(exports, "DecryptGuard", { enumerable: true, get: function () { return decrypt_guard_1.DecryptGuard; } });
 //# sourceMappingURL=index.js.map

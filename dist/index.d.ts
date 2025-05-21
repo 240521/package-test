@@ -43,3 +43,5 @@ export declare class StringUtils {
 export declare function getCurrentTime(): string;
 export declare function getCurrentDate(): string;
 export declare function getCurrentTimeStamp(): number;
+export { DecryptModule } from './decrypt.module';
+export { DecryptGuard } from './decrypt.guard';

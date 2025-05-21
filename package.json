@@ -1,7 +1,7 @@
 {
   "name": "package-test",
-  "version": "1.0.1",
-  "description": "用来测试发布npm依赖包",
+  "version": "1.0.0",
+  "description": "NestJS 授权验证包",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
@@ -16,10 +16,17 @@
     "lint": "eslint src --ext .ts",
     "format": "prettier --write \"src/**/*.ts\""
   },
-  "keywords": ["typescript", "npm", "lib"],
+  "keywords": ["nestjs", "authorization", "encryption"],
   "author": "",
   "license": "MIT",
+  "peerDependencies": {
+    "@nestjs/common": "^10.0.0",
+    "@nestjs/core": "^10.0.0"
+  },
   "devDependencies": {
+    "@nestjs/common": "^10.0.0",
+    "@nestjs/core": "^10.0.0",
+    "@nestjs/platform-express": "^10.0.0",
     "@types/jest": "^29.5.12",
     "@types/node": "^20.11.24",
     "@typescript-eslint/eslint-plugin": "^7.1.0",

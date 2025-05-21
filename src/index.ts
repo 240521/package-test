@@ -210,3 +210,6 @@ export function getCurrentDate(): string {
 export function getCurrentTimeStamp(): number {
     return Date.now();
 }
+
+export { DecryptModule } from './decrypt.module';
+export { DecryptGuard } from './decrypt.guard';
